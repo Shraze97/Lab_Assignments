@@ -16,39 +16,40 @@ In this lab, you will relate the two definitions by constructing functions that 
 -/
 universe u
 
+def supp_ofVector {α : Type u} : (n : ℕ) → (l : List α ) → (h : l.length = n ) →  Vec α n 
+| 0 , [], h =>
+  Vec.nil
+| n + 1, x :: xs, h =>
+  have h' : xs.length = (x :: xs).length-1 := by 
+      rw[List.length_cons]
+      simp
+  have h' : xs.length = n := by 
+      rw[List.length_cons] at h 
+      simp at h
+      assumption
+  Vec.cons x (supp_ofVector _ xs h')
+  
+
 /-- Convert a `Vector` to a `Vec` -/
 def Vec.ofVector {α : Type u}: (n : ℕ) →  Vector α n → Vec α n 
 | n, v => 
-  match v with 
-  | ⟨l, h⟩ => 
-    match l with 
-    | [] =>  
-      match h with 
-      | rfl => Vec.nil
-    | x :: xs => 
-      have h' : xs.length = n-1 := by 
-        rw[←h]
-        rw[List.length_cons]
-        simp
-      match h with 
-      | rfl => Vec.cons x (Vec.ofVector ((x :: xs).length -1) ⟨xs, h'⟩) 
+  supp_ofVector n v.val v.property
+
+def supp_toVector {α : Type u} {n : ℕ} : Vec α n → Vector α n
+| Vec.nil => ⟨[], rfl⟩
+| Vec.cons head tail =>
+  ⟨ head :: (supp_toVector tail).val, 
+    by 
+      rw[List.length_cons]
+      rw[(supp_toVector tail).2] ⟩
 
 
 /-- Convert a `Vec` to a `Vector` -/
 def Vec.toVector {α : Type u}: (n : ℕ) →  Vec α n → Vector α n
-| n, v => 
-  match v with 
-  | Vec.nil => 
-    ⟨[], rfl⟩
-  | Vec.cons x xs =>
-    match Vec.toVector _ xs with 
-    | ⟨l, h⟩ => 
-      ⟨x :: l, by 
-        rw[List.length_cons]
-        rw[h]
-        ⟩
+| _, v => 
+  supp_toVector v
     
-
+#check Vector.nil  
 
 /-- Mapping a `Vec` to a `Vector` and back gives the original `Vec` -/
 theorem Vec.ofVector.toVector {α : Type u} (n : ℕ) (v : Vec α n) :
@@ -57,9 +58,25 @@ theorem Vec.ofVector.toVector {α : Type u} (n : ℕ) (v : Vec α n) :
   | Vec.nil => 
     rw[Vec.toVector]
     simp
-    have h : List.length [] = 0 := by 
-      simp
-    rw[Vec.ofVector]  
+    rw[supp_toVector]    
+    rw[Vec.ofVector]
+    simp
+    rw[supp_ofVector]
+  | Vec.cons x xs => 
+    have lem : Vec.ofVector _ (Vec.toVector _ xs) = xs := by 
+      apply Vec.ofVector.toVector
+    rw[Vec.toVector]
+    simp
+    rw[supp_toVector]
+    rw[Vec.ofVector]
+    simp 
+    rw[supp_ofVector]
+    simp
+    rw[Vec.ofVector] at lem
+    simp at lem 
+    assumption
+
+
     
     
 /-- Mapping a `Vector` to a `Vec` and back gives the original `Vector` -/
