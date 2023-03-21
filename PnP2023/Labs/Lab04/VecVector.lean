@@ -18,16 +18,50 @@ universe u
 
 /-- Convert a `Vector` to a `Vec` -/
 def Vec.ofVector {α : Type u}: (n : ℕ) →  Vector α n → Vec α n 
-| _, _ => sorry
+| n, v => 
+  match v with 
+  | ⟨l, h⟩ => 
+    match l with 
+    | [] =>  
+      match h with 
+      | rfl => Vec.nil
+    | x :: xs => 
+      have h' : xs.length = n-1 := by 
+        rw[←h]
+        rw[List.length_cons]
+        simp
+      match h with 
+      | rfl => Vec.cons x (Vec.ofVector ((x :: xs).length -1) ⟨xs, h'⟩) 
+
 
 /-- Convert a `Vec` to a `Vector` -/
 def Vec.toVector {α : Type u}: (n : ℕ) →  Vec α n → Vector α n
-| _, _ => sorry
+| n, v => 
+  match v with 
+  | Vec.nil => 
+    ⟨[], rfl⟩
+  | Vec.cons x xs =>
+    match Vec.toVector _ xs with 
+    | ⟨l, h⟩ => 
+      ⟨x :: l, by 
+        rw[List.length_cons]
+        rw[h]
+        ⟩
+    
+
 
 /-- Mapping a `Vec` to a `Vector` and back gives the original `Vec` -/
 theorem Vec.ofVector.toVector {α : Type u} (n : ℕ) (v : Vec α n) :
-  Vec.ofVector n (Vec.toVector n v) = v := sorry
-
+  Vec.ofVector n (Vec.toVector n v) = v := by 
+  match v with
+  | Vec.nil => 
+    rw[Vec.toVector]
+    simp
+    have h : List.length [] = 0 := by 
+      simp
+    rw[Vec.ofVector]  
+    
+    
 /-- Mapping a `Vector` to a `Vec` and back gives the original `Vector` -/
 theorem Vec.toVector.ofVector {α : Type u} (n : ℕ) (v : Vector α n) :
   Vec.toVector n (Vec.ofVector n v) = v := sorry
