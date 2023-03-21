@@ -37,13 +37,38 @@ We will work throughout with lists of natural numbers.
 -/
 
 /-- Removing an element from a list does not increase length -/
-theorem remove_length_le (a : ℕ) (l : List ℕ) : (List.remove a l).length ≤ l.length := by 
-  sorry
+theorem remove_length_le (a : ℕ) (l : List ℕ) : (List.remove a l).length ≤ l.length := by
+  induction l with 
+  | nil => simp[List.remove_eq_of_not_mem]
+  | cons a' l ih =>
+    by_cases h : a = a'
+    · simp[h] at ih
+      simp[List.remove, List.length_cons,h]
+      have h1 : List.length l <  Nat.succ (List.length l) := by simp 
+      rw[Nat.lt_iff_le_and_ne] at h1 
+      apply Nat.le_trans ih h1.1 
+    · simp[List.remove, List.length_cons, h]
+      rw[Nat.succ_le_succ_iff]
+      apply ih 
 
 
 /-- Removing a member from a list shortens the list -/
 theorem remove_mem_length {a : ℕ} {l : List ℕ} (hyp : a ∈ l) : (List.remove a l).length < l.length  := by 
-  sorry
+  match l with 
+  | head :: tail => 
+    by_cases h : a = head 
+    · simp[h, List.remove] 
+      have lem : List.length (List.remove head tail) ≤ List.length tail := by apply remove_length_le    
+      apply Nat.succ_le_succ 
+      assumption
+    · simp[List.remove,h] 
+      have lem : a ∈ tail := by 
+        rw[List.mem_cons] at hyp
+        simp[h] at hyp 
+        assumption
+    
+      apply Nat.succ_lt_succ 
+      apply remove_mem_length lem
 
 /-!
 - Problem 3: Prove termination of the following definition (remove the sorry). You may wish to remove the `decreasing_by` line.
@@ -53,5 +78,6 @@ def selectionSort (l : List ℕ) : List ℕ :=
     if c: l=[] then [] else
     (smallest l c) :: selectionSort (List.remove (smallest l c) l)
 termination_by _ _ => l.length
-decreasing_by sorry
+decreasing_by apply remove_mem_length
+              apply smallest_in_list l c
 
