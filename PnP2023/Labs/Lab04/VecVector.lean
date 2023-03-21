@@ -78,7 +78,47 @@ theorem Vec.ofVector.toVector {α : Type u} (n : ℕ) (v : Vec α n) :
 
 
     
-    
 /-- Mapping a `Vector` to a `Vec` and back gives the original `Vector` -/
 theorem Vec.toVector.ofVector {α : Type u} (n : ℕ) (v : Vector α n) :
-  Vec.toVector n (Vec.ofVector n v) = v := sorry
+  Vec.toVector n (Vec.ofVector n v) = v := by
+  match v with
+  | ⟨l,h⟩ => 
+    match l with 
+    | [] => 
+      rw[Vec.ofVector]
+      simp
+      simp at h 
+      subst h 
+      rw[supp_ofVector]
+      rw[Vec.toVector]
+      simp 
+    | head :: tail => 
+      have h' : tail.length = (head :: tail).length-1 := by 
+        rw[List.length_cons]
+        simp
+      rw[h] at h'
+      have lem : Vec.toVector _ (Vec.ofVector _ ⟨tail, h'⟩) = ⟨tail, h'⟩ := by 
+        apply Vec.toVector.ofVector
+      rw[Vec.ofVector]
+      set b := tail.length with b_def
+      have h'' : n = b + 1 := by 
+        rw[b_def]
+        rw[List.length_cons] at h
+        simp at h
+        rw[← h]
+      simp at *
+      subst h'' 
+      rw[supp_ofVector]
+      simp
+      rw[Vec.toVector]
+      simp
+      rw[supp_toVector]
+      rw[Vec.ofVector] at lem
+      simp at lem
+      rw[Vec.toVector] at lem
+      simp at lem
+      
+      
+
+
+     
